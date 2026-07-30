@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Not found · paisa.{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <h1 class="display-1 fw-bold">404</h1>
+  <p class="lead text-secondary">This page doesn't exist.</p>
+  <a href="{{ url_for('main.landing') }}" class="btn btn-primary rounded-pill">Back home</a>
+</div>
+{% endblock %}

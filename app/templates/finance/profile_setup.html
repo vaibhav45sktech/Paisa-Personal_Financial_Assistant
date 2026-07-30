@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Financial Profile · paisa.{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <span class="badge rounded-pill bg-info-subtle text-info-emphasis px-3 py-2">Step 1 of 2</span>
+  <h1 class="fw-bold mt-2">Tell us about your money</h1>
+  <p class="text-secondary">All values in INR (₹). You can change these anytime.</p>
+</div>
+
+<form method="POST" novalidate id="profileForm">
+  {{ form.hidden_tag() }}
+
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4 p-md-5">
+      <div class="mb-4">
+        <label class="form-label small text-uppercase fw-semibold text-muted">Income type</label>
+        <div class="d-flex flex-wrap gap-2 pill-select" data-target="income_type">
+          {% for value, label in form.income_type.choices %}
+            <button type="button"
+              class="btn btn-outline-dark rounded-pill pill-option {% if form.income_type.data == value %}active{% endif %}"
+              data-value="{{ value }}">{{ label }}</button>
+          {% endfor %}
+        </div>
+        {{ form.income_type(class="d-none", id="income_type") }}
+        {% for e in form.income_type.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="mb-2">
+        {{ form.monthly_gross_income.label(class="form-label small text-uppercase fw-semibold text-muted") }}
+        <div class="input-group input-group-lg">
+          <span class="input-group-text">₹</span>
+          {{ form.monthly_gross_income(class="form-control rounded-end-3" + (" is-invalid" if form.monthly_gross_income.errors else ""), placeholder="e.g. 75000", id="income_amount", step="1", min="0") }}
+        </div>
+        {% for e in form.monthly_gross_income.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4 p-md-5">
+      <div class="d-flex justify-content-between align-items-end mb-3 flex-wrap gap-2">
+        <div>
+          <h2 class="h4 fw-bold mb-1">Monthly budget</h2>
+          <div class="text-muted small">Estimate what you spend per category.</div>
+        </div>
+        <div class="text-end">
+          <div class="text-uppercase small fw-semibold text-muted">Total</div>
+          <div class="h3 fw-bold mb-0" id="budgetTotal">₹0</div>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        {% for cat in categories %}
+          {% set current = profile.budget_map[cat] if profile and profile.budget_map.get(cat) is not none else 0 %}
+          <div class="col-md-6 col-lg-4">
+            <label class="budget-row d-flex align-items-center bg-light rounded-3 px-3 py-2">
+              <span class="flex-grow-1 small fw-medium">{{ cat }}</span>
+              <span class="text-muted me-2">₹</span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                class="budget-input form-control form-control-sm text-end bg-transparent border-0 shadow-none fw-semibold"
+                name="budget[{{ cat }}]"
+                value="{{ current | int if current else '' }}"
+                placeholder="0"
+              />
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="alert alert-success mt-4 rounded-3 d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-uppercase small fw-semibold text-success">Estimated savings / month</div>
+          <div class="h4 fw-bold mb-0" id="estimatedSavings">₹0</div>
+        </div>
+        <i class="bi bi-piggy-bank fs-2 text-success"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end">
+    {{ form.submit(class="btn btn-primary btn-lg rounded-pill px-4") }}
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.__PFA_BUDGET_INIT__ = true;
+</script>
+{% endblock %}

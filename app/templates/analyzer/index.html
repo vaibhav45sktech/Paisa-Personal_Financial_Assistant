@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Purchase Analyzer · paisa.{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <h1 class="fw-bold mb-1"><i class="bi bi-cart-check me-1"></i> Purchase Impact Analyzer</h1>
+  <p class="text-secondary">Thinking of buying something big? See how it would fit into your monthly cashflow before you commit.</p>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body p-4">
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.product_name.label(class="form-label small text-uppercase fw-semibold text-muted") }}
+            {{ form.product_name(class="form-control form-control-lg rounded-3" + (" is-invalid" if form.product_name.errors else ""), placeholder="e.g. Honda Activa 125") }}
+            {% for e in form.product_name.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="mb-3">
+            {{ form.product_price.label(class="form-label small text-uppercase fw-semibold text-muted") }}
+            <div class="input-group input-group-lg">
+              <span class="input-group-text">₹</span>
+              {{ form.product_price(class="form-control rounded-end-3", placeholder="90000") }}
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-6">
+              {{ form.down_payment.label(class="form-label small text-uppercase fw-semibold text-muted") }}
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                {{ form.down_payment(class="form-control rounded-end-3", placeholder="0") }}
+              </div>
+            </div>
+            <div class="col-6">
+              {{ form.tenure_months.label(class="form-label small text-uppercase fw-semibold text-muted") }}
+              {{ form.tenure_months(class="form-control", placeholder="24") }}
+            </div>
+          </div>
+
+          <div class="mb-4 mt-3">
+            {{ form.interest_rate.label(class="form-label small text-uppercase fw-semibold text-muted") }}
+            <div class="input-group">
+              {{ form.interest_rate(class="form-control", placeholder="10.5") }}
+              <span class="input-group-text">%</span>
+            </div>
+          </div>
+
+          {{ form.submit(class="btn btn-primary btn-lg w-100 rounded-pill") }}
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    {% if result %}
+      {% set colors = {'affordable':'success','borderline':'warning','danger':'danger','unknown':'secondary'} %}
+      {% set c = colors.get(result.status, 'secondary') %}
+      <div class="card border-0 shadow-sm rounded-4 mb-3 border-start border-4 border-{{ c }} pop-in">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center gap-3">
+            <div class="fs-1">
+              {% if result.status == 'affordable' %}😄
+              {% elif result.status == 'borderline' %}🤔
+              {% elif result.status == 'danger' %}😱
+              {% else %}🤷{% endif %}
+            </div>
+            <div>
+              <div class="text-uppercase fw-semibold text-{{ c }}">
+                {% if result.status == 'affordable' %}Affordable
+                {% elif result.status == 'borderline' %}Borderline
+                {% elif result.status == 'danger' %}Danger zone
+                {% else %}Need more data{% endif %}
+              </div>
+              <h2 class="h4 fw-bold mb-0">{{ result.product_name }} · ₹{{ '{:,.0f}'.format(result.product_price) }}</h2>
+            </div>
+          </div>
+          <div class="alert alert-{{ c }}-subtle text-{{ c }}-emphasis rounded-3 mt-3 mb-0"><i class="bi bi-lightbulb-fill me-1"></i>{{ result.recommendation }}</div>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        {% for label, val, sub in [
+          ('Monthly EMI', result.emi, 'for ' ~ result.tenure_months ~ ' months'),
+          ('Loan amount', result.loan_amount, 'after ₹' ~ '{:,.0f}'.format(result.down_payment) ~ ' down'),
+          ('Total interest', result.total_interest, ''),
+          ('Total cost', result.total_cost, 'incl. interest'),
+          ('New DTI %', result.dti_new_pct, 'of monthly income'),
+          ('Savings after EMI', result.savings_after_emi, 'per month'),
+        ] %}
+          <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+              <div class="card-body">
+                <div class="text-uppercase small fw-semibold text-muted">{{ label }}</div>
+                <div class="h4 fw-bold mb-0">
+                  {% if 'DTI' in label %}{{ val }}%{% else %}₹{{ '{:,.0f}'.format(val) }}{% endif %}
+                </div>
+                {% if sub %}<div class="small text-muted mt-1">{{ sub }}</div>{% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-5">
+        <div class="fs-1">🛒</div>
+        <p class="text-muted">Enter a purchase on the left to see its impact on your monthly cashflow.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

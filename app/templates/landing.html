@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}paisa. — Your money, calmer.{% endblock %}
+
+{% block content %}
+<section class="row align-items-center g-5">
+  <div class="col-lg-7">
+    <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis px-3 py-2 mb-3">
+      <i class="bi bi-lightning-charge-fill me-1"></i> Your money, calmer.
+    </span>
+    <h1 class="display-4 fw-bold lh-1 mb-3 hero-title">
+      A friendly place to plan your
+      <span class="hero-highlight">savings</span>,
+      <span class="text-primary">goals</span>
+      &amp; everyday spends.
+    </h1>
+    <p class="lead text-secondary mb-4" style="max-width: 560px;">
+      paisa is your personal money buddy. Set a budget, add goals, and see
+      where every rupee is going — no spreadsheets, no stress.
+    </p>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-lg rounded-pill px-4">
+        Get started free <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-outline-dark btn-lg rounded-pill px-4">
+        I already have an account
+      </a>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="feature-icon bg-warning-subtle text-warning-emphasis">
+          <i class="bi bi-wallet2"></i>
+        </div>
+        <div>
+          <div class="fw-semibold">Budget in a minute</div>
+          <div class="text-muted small">14 clear categories</div>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="feature-icon bg-info-subtle text-info-emphasis">
+          <i class="bi bi-bullseye"></i>
+        </div>
+        <div>
+          <div class="fw-semibold">Track goals visually</div>
+          <div class="text-muted small">Priority &amp; deadlines</div>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="feature-icon bg-success-subtle text-success-emphasis">
+          <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <div>
+          <div class="fw-semibold">See what you save</div>
+          <div class="text-muted small">Right on the dashboard</div>
+        </div>
+      </div>
+
+      <div class="bg-light rounded-3 p-3">
+        <div class="text-uppercase small text-muted fw-semibold">Estimated savings</div>
+        <div class="display-6 fw-bold">₹42,500 <span class="fs-6 text-success">/month</span></div>
+        <div class="progress mt-2" style="height: 10px;">
+          <div class="progress-bar bg-success" role="progressbar" style="width: 62%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

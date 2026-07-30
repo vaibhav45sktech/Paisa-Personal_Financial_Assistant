@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Create your account · paisa.{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7 col-lg-5">
+    <div class="text-center mb-4">
+      <h1 class="fw-bold">Create your account</h1>
+      <p class="text-secondary">Takes about 30 seconds.</p>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body p-4 p-md-5">
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.username.label(class="form-label small text-uppercase fw-semibold text-muted") }}
+            {{ form.username(class="form-control form-control-lg rounded-3" + (" is-invalid" if form.username.errors else ""), placeholder="jane_doe") }}
+            {% for e in form.username.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="mb-3">
+            {{ form.email.label(class="form-label small text-uppercase fw-semibold text-muted") }}
+            {{ form.email(class="form-control form-control-lg rounded-3" + (" is-invalid" if form.email.errors else ""), placeholder="jane@paisa.app") }}
+            {% for e in form.email.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="mb-3">
+            {{ form.phone.label(class="form-label small text-uppercase fw-semibold text-muted") }}
+            {{ form.phone(class="form-control form-control-lg rounded-3" + (" is-invalid" if form.phone.errors else ""), placeholder="+91 98xxxxxxxx") }}
+            {% for e in form.phone.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="mb-3">
+            {{ form.password.label(class="form-label small text-uppercase fw-semibold text-muted") }}
+            {{ form.password(class="form-control form-control-lg rounded-3" + (" is-invalid" if form.password.errors else ""), placeholder="Min. 6 characters") }}
+            {% for e in form.password.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="mb-4">
+            {{ form.confirm.label(class="form-label small text-uppercase fw-semibold text-muted") }}
+            {{ form.confirm(class="form-control form-control-lg rounded-3" + (" is-invalid" if form.confirm.errors else "")) }}
+            {% for e in form.confirm.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+
+          {{ form.submit(class="btn btn-primary btn-lg w-100 rounded-pill") }}
+
+          <p class="text-center text-muted small mt-4 mb-0">
+            Already have an account?
+            <a href="{{ url_for('auth.login') }}" class="fw-semibold">Log in</a>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

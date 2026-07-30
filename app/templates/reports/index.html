@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Financial Report · paisa.{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3 no-print">
+  <div>
+    <h1 class="fw-bold mb-1"><i class="bi bi-file-earmark-text me-1"></i>Monthly report</h1>
+    <p class="text-secondary mb-0">{{ today.strftime('%B %Y') }} · {{ current_user.username }}</p>
+  </div>
+  <button onclick="window.print()" class="btn btn-primary rounded-pill px-4"><i class="bi bi-download me-1"></i>Save as PDF</button>
+</div>
+
+<div class="print-report">
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 h-100"><div class="card-body">
+        <div class="small text-uppercase text-muted fw-semibold">Financial Health</div>
+        <div class="display-6 fw-bold">{{ health.total }}/100</div>
+        <div class="small text-muted">{{ health.grade }}</div>
+      </div></div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 h-100"><div class="card-body">
+        <div class="small text-uppercase text-muted fw-semibold">Net Worth</div>
+        <div class="h3 fw-bold">{{ net_worth.net_worth | inr }}</div>
+        <div class="small text-muted">Accounts + Assets</div>
+      </div></div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 h-100"><div class="card-body">
+        <div class="small text-uppercase text-muted fw-semibold">This month</div>
+        <div>Income <strong>{{ monthly.income | inr }}</strong></div>
+        <div>Spent <strong>{{ monthly.expenses | inr }}</strong></div>
+        <div>Saved <strong class="{% if monthly.savings < 0 %}text-danger{% endif %}">{{ monthly.savings | inr }}</strong></div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 mb-4"><div class="card-body p-4">
+    <h2 class="h4 fw-bold mb-3">Health score breakdown</h2>
+    <div class="row row-cols-1 row-cols-md-5 g-3">
+      {% for k, comp in health.components.items() %}
+        <div class="col">
+          <div class="text-muted small text-uppercase fw-semibold">{{ k.replace('_',' ') }}</div>
+          <div class="h5 fw-bold">{{ comp.score }} / {{ comp.max }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div></div>
+
+  {% if actual_vs_budget %}
+  <div class="card border-0 shadow-sm rounded-4 mb-4"><div class="card-body p-4">
+    <h2 class="h4 fw-bold mb-3">Actual vs budgeted</h2>
+    <table class="table">
+      <thead><tr><th>Category</th><th class="text-end">Budgeted</th><th class="text-end">Actual</th><th class="text-end">%</th></tr></thead>
+      <tbody>
+        {% for r in actual_vs_budget %}
+          <tr><td>{{ r.category }}</td><td class="text-end">{{ r.budgeted | inr }}</td><td class="text-end">{{ r.actual | inr }}</td><td class="text-end">{{ r.pct }}%</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div></div>
+  {% endif %}
+</div>
+{% endblock %}

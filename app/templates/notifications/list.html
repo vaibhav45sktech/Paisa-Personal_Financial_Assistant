@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Notifications · paisa.{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
+  <div>
+    <h1 class="fw-bold mb-1"><i class="bi bi-bell me-1"></i>Notifications</h1>
+    <p class="text-secondary mb-0">Alerts, budget warnings, and coach nudges.</p>
+  </div>
+  <form method="post" action="{{ url_for('notifications.mark_all') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <button class="btn btn-outline-dark rounded-pill">Mark all read</button>
+  </form>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+  <div class="card-body p-0">
+    {% if notifications %}
+      <div class="list-group list-group-flush">
+        {% for n in notifications %}
+          {% set c = 'danger' if n.type == 'alert' else ('warning' if n.type == 'warning' else 'info') %}
+          <div class="list-group-item d-flex justify-content-between align-items-start gap-3 {% if not n.is_read %}bg-light{% endif %}">
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-{{ c }}-subtle text-{{ c }}-emphasis rounded-pill">{{ n.type }}</span>
+                <span class="fw-semibold">{{ n.title }}</span>
+                {% if not n.is_read %}<span class="dot-unread"></span>{% endif %}
+              </div>
+              <p class="text-muted mb-1 mt-1 small">{{ n.message }}</p>
+              <div class="small text-muted">{{ n.created_at.strftime('%d %b, %H:%M') }}</div>
+            </div>
+            <div class="text-end d-flex flex-column gap-1 align-items-end">
+              {% if n.action_url %}<a href="{{ n.action_url }}" class="btn btn-sm btn-outline-dark rounded-pill">Open</a>{% endif %}
+              {% if not n.is_read %}
+                <form method="post" action="{{ url_for('notifications.mark_read', notification_id=n.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <button class="btn btn-sm btn-link">Mark read</button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-5">
+        <i class="bi bi-bell-slash display-4 text-muted"></i>
+        <p class="text-secondary mt-3">You're all caught up.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

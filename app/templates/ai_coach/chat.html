@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}AI Coach · paisa.{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-3">
+    <div class="card border-0 shadow-sm rounded-4 h-100">
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h6 fw-bold mb-0"><i class="bi bi-chat-dots me-1"></i>Chats</h2>
+          <form method="post" action="{{ url_for('ai_coach.new_session') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button class="btn btn-sm btn-outline-dark rounded-pill" title="New chat"><i class="bi bi-plus-lg"></i></button>
+          </form>
+        </div>
+        <div class="list-group list-group-flush">
+          {% for s in sessions %}
+            <a href="{{ url_for('ai_coach.chat', session_id=s.id) }}"
+               class="list-group-item list-group-item-action rounded-3 mb-1 {% if s.id == session.id %}active bg-dark border-0{% endif %}">
+              <div class="d-flex justify-content-between">
+                <span class="text-truncate small {% if s.id == session.id %}text-white{% endif %}">{{ s.session_title }}</span>
+              </div>
+              <div class="small {% if s.id == session.id %}text-white-50{% else %}text-muted{% endif %}">{{ s.updated_at.strftime('%d %b, %H:%M') }}</div>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-9">
+    <div class="card border-0 shadow-sm rounded-4 chat-card">
+      <div class="card-header bg-white border-0 pt-3 rounded-top-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h1 class="h4 fw-bold mb-0"><span class="coach-avatar">🪙</span> paisa Coach</h1>
+            <small class="text-muted">Powered by Gemini · {% if gemini_available %}<span class="text-success">connected</span>{% else %}<span class="text-danger">no API key</span>{% endif %}</small>
+          </div>
+          {% if session.messages %}
+          <form method="post" action="{{ url_for('ai_coach.delete', session_id=session.id) }}" onsubmit="return confirm('Delete this chat?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button class="btn btn-sm btn-link text-danger"><i class="bi bi-trash"></i></button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-body p-4 chat-scroll">
+        {% if not session.messages %}
+          <div class="text-center py-4 empty-chat">
+            <div class="coach-avatar-big mb-3 bounce">🪙</div>
+            <h2 class="h5 fw-bold">Hi {{ current_user.username }} 👋</h2>
+            <p class="text-muted">Ask me anything about your money.</p>
+            {% if insights %}
+            <div class="d-flex flex-column gap-2 mt-3">
+              {% for tip in insights %}
+                <div class="alert alert-info rounded-4 mb-0 text-start small mx-auto" style="max-width:420px;">💡 {{ tip }}</div>
+              {% endfor %}
+            </div>
+            {% endif %}
+            <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+              {% for q in ["How can I save more this month?", "Is my Financial Health Score good?", "How much should I put into an emergency fund?", "Suggest a budget for my income."] %}
+                <button class="btn btn-outline-dark btn-sm rounded-pill starter-q" data-q="{{ q }}">{{ q }}</button>
+              {% endfor %}
+            </div>
+          </div>
+        {% else %}
+          {% for m in session.messages %}
+            <div class="msg-row d-flex mb-3 {% if m.role == 'user' %}justify-content-end{% endif %}">
+              <div class="msg-bubble {% if m.role == 'user' %}msg-user{% else %}msg-assistant{% endif %}">
+                {{ m.content | replace('\n', '<br>') | safe }}
+                <div class="msg-time">{{ m.timestamp.strftime('%H:%M') }}</div>
+              </div>
+            </div>
+          {% endfor %}
+          <span id="latest"></span>
+        {% endif %}
+      </div>
+      <div class="card-footer bg-white border-0 rounded-bottom-4 p-3">
+        <form method="post" action="{{ url_for('ai_coach.send', session_id=session.id) }}" class="d-flex gap-2" id="chatForm">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <input class="form-control form-control-lg rounded-pill" placeholder="Ask paisa Coach…" name="message" id="chatInput" autocomplete="off" required />
+          <button class="btn btn-primary rounded-circle" style="width:52px;height:52px;" title="Send"><i class="bi bi-send-fill"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Starter question buttons — populate input
+  document.querySelectorAll('.starter-q').forEach(b => b.addEventListener('click', () => {
+    document.getElementById('chatInput').value = b.dataset.q;
+    document.getElementById('chatInput').focus();
+  }));
+  // Auto scroll to latest
+  const latest = document.getElementById('latest');
+  if (latest) latest.scrollIntoView({behavior:'smooth', block:'end'});
+</script>
+{% endblock %}

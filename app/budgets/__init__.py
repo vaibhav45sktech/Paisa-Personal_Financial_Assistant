@@ -1,0 +1,1 @@
+"""Budgets blueprint package."""

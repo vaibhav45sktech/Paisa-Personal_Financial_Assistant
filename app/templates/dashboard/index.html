@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · paisa.{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+  <div>
+    <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis px-3 py-2">
+      <i class="bi bi-stars me-1"></i> Your money, at a glance
+    </span>
+    <h1 class="display-5 fw-bold mt-2 mb-1">
+      Welcome, <span class="text-primary">{{ current_user.username }}</span>.
+    </h1>
+    <p class="text-secondary mb-0">Here's how things are shaping up this month.</p>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ url_for('finance.profile_setup') }}" class="badge rounded-pill px-3 py-2 text-decoration-none {% if summary.profile_completed %}bg-success-subtle text-success-emphasis{% else %}bg-light text-muted border{% endif %}">
+      {% if summary.profile_completed %}<i class="bi bi-check-circle-fill me-1"></i>Profile ✓{% else %}<i class="bi bi-circle me-1"></i>Profile{% endif %}
+    </a>
+    <a href="{{ url_for('finance.goals_setup') }}" class="badge rounded-pill px-3 py-2 text-decoration-none {% if summary.goals_created %}bg-success-subtle text-success-emphasis{% else %}bg-light text-muted border{% endif %}">
+      {% if summary.goals_created %}<i class="bi bi-check-circle-fill me-1"></i>Goals ✓{% else %}<i class="bi bi-circle me-1"></i>Goals{% endif %}
+    </a>
+    <a href="{{ url_for('accounts.index') }}" class="badge rounded-pill px-3 py-2 text-decoration-none {% if summary.accounts_count > 0 %}bg-success-subtle text-success-emphasis{% else %}bg-light text-muted border{% endif %}">
+      {% if summary.accounts_count > 0 %}<i class="bi bi-check-circle-fill me-1"></i>Accounts ✓{% else %}<i class="bi bi-circle me-1"></i>Accounts{% endif %}
+    </a>
+  </div>
+</div>
+
+<!-- Row 1: Health Score + Net Worth -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm rounded-4 h-100">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="text-uppercase small fw-semibold text-muted">Financial Health Score</div>
+            <div class="d-flex align-items-baseline gap-2 mt-1">
+              <span class="display-3 fw-bold" id="healthScoreNum" style="color: {% if health.total >= 70 %}#22C55E{% elif health.total >= 50 %}#F59E0B{% else %}#EF4444{% endif %};">{{ health.total }}</span>
+              <span class="text-muted">/ 100</span>
+            </div>
+            <div class="mt-1"><span class="badge bg-dark rounded-pill" id="healthGrade">{{ health.grade }}</span></div>
+          </div>
+          <!-- Animated health face + dial -->
+          <svg class="health-face" viewBox="0 0 200 200" role="img" aria-label="Health score face">
+            <!-- Dial: half-circle track + fill -->
+            <path class="dial-track" d="M20 140 A80 80 0 0 1 180 140" />
+            {% set score_pct = (health.total / 100) %}
+            {% set dash_len = 251 %}
+            <path class="dial-fill" d="M20 140 A80 80 0 0 1 180 140"
+                  stroke-dasharray="{{ dash_len }}"
+                  stroke-dashoffset="{{ dash_len - (dash_len * score_pct) }}"
+                  stroke="{% if health.total >= 85 %}#22C55E{% elif health.total >= 70 %}#65A30D{% elif health.total >= 50 %}#F59E0B{% elif health.total >= 30 %}#F97316{% else %}#EF4444{% endif %}" />
+            <!-- Face circle -->
+            <circle cx="100" cy="105" r="42" fill="{% if health.total >= 70 %}#FEF3C7{% elif health.total >= 50 %}#FEE2E2{% else %}#FECACA{% endif %}"
+                    stroke="#1c1917" stroke-width="2.5" />
+            <!-- Eyes -->
+            <circle class="eye" cx="86" cy="100" r="3.5" fill="#1c1917" />
+            <circle class="eye" cx="114" cy="100" r="3.5" fill="#1c1917" style="animation-delay: 0.1s;" />
+            <!-- Mouth (changes with score) -->
+            <g class="mouth">
+              {% if health.total >= 85 %}
+                <path d="M85 118 Q100 138 115 118" stroke="#1c1917" stroke-width="3" fill="none" stroke-linecap="round" />
+                <path d="M80 122 Q100 145 120 122" stroke="#f97316" stroke-width="2" fill="#fff" stroke-linecap="round" />
+              {% elif health.total >= 70 %}
+                <path d="M85 118 Q100 132 115 118" stroke="#1c1917" stroke-width="3" fill="none" stroke-linecap="round" />
+              {% elif health.total >= 50 %}
+                <path d="M85 122 L115 122" stroke="#1c1917" stroke-width="3" fill="none" stroke-linecap="round" />
+              {% elif health.total >= 30 %}
+                <path d="M85 128 Q100 118 115 128" stroke="#1c1917" stroke-width="3" fill="none" stroke-linecap="round" />
+              {% else %}
+                <path d="M85 132 Q100 115 115 132" stroke="#1c1917" stroke-width="3" fill="none" stroke-linecap="round" />
+                <circle cx="90" cy="90" r="2" fill="#3b82f6"/>
+                <circle cx="110" cy="90" r="2" fill="#3b82f6"/>
+              {% endif %}
+            </g>
+          </svg>
+        </div>
+
+        <div class="mt-4 d-flex flex-column gap-2">
+          {% set comps = [
+            ('Emergency fund', health.components.emergency_fund.score, health.components.emergency_fund.max, health.components.emergency_fund.months|string ~ ' mo. cushion'),
+            ('Savings rate', health.components.savings_rate.score, health.components.savings_rate.max, health.components.savings_rate.rate_pct|string ~ '%'),
+            ('Debt-to-Income', health.components.dti.score, health.components.dti.max, health.components.dti.ratio_pct|string ~ '%'),
+            ('Investments', health.components.investment_ratio.score, health.components.investment_ratio.max, health.components.investment_ratio.ratio_pct|string ~ '%'),
+            ('Budget discipline', health.components.budget_discipline.score, health.components.budget_discipline.max, ''),
+          ] %}
+          {% for name, score, mx, note in comps %}
+            <div>
+              <div class="d-flex justify-content-between small">
+                <span><strong>{{ name }}</strong> <span class="text-muted">{{ note }}</span></span>
+                <span class="fw-semibold">{{ score }} / {{ mx }}</span>
+              </div>
+              <div class="progress mt-1" style="height: 6px;">
+                <div class="progress-bar" role="progressbar" style="width: {{ (score / mx * 100) if mx else 0 }}%; background: {% if score/mx >= 0.7 %}#22C55E{% elif score/mx >= 0.4 %}#F59E0B{% else %}#EF4444{% endif %};"></div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="row g-3 h-100">
+      <div class="col-sm-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+          <div class="card-body">
+            <div class="feature-icon bg-dark text-white mb-2"><i class="bi bi-piggy-bank"></i></div>
+            <div class="text-uppercase small fw-semibold text-muted">Net worth</div>
+            <div class="h3 fw-bold mb-0">{{ net_worth.net_worth | inr }}</div>
+            <div class="small text-muted mt-1">
+              Accounts {{ net_worth.accounts_total | inr }} · Assets {{ net_worth.assets_total | inr }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+          <div class="card-body">
+            <div class="feature-icon bg-info-subtle text-info-emphasis mb-2"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="text-uppercase small fw-semibold text-muted">This month · Income</div>
+            <div class="h3 fw-bold mb-0">{{ monthly.income | inr }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+          <div class="card-body">
+            <div class="feature-icon bg-warning-subtle text-warning-emphasis mb-2"><i class="bi bi-wallet2"></i></div>
+            <div class="text-uppercase small fw-semibold text-muted">This month · Spent</div>
+            <div class="h3 fw-bold mb-0">{{ monthly.expenses | inr }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+          <div class="card-body">
+            <div class="feature-icon bg-success-subtle text-success-emphasis mb-2"><i class="bi bi-cash-stack"></i></div>
+            <div class="text-uppercase small fw-semibold text-muted">This month · Saved</div>
+            <div class="h3 fw-bold mb-0 {% if monthly.savings < 0 %}text-danger{% endif %}">{{ monthly.savings | inr }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Row 2: Actual vs Budgeted chart + Goals -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h2 class="h4 fw-bold mb-1">Actual vs Budgeted</h2>
+            <div class="text-muted small">This month · {{ today.strftime('%B %Y') }}</div>
+          </div>
+          <a href="{{ url_for('budgets.index') }}" class="fw-semibold small">Edit budgets</a>
+        </div>
+
+        {% if actual_vs_budget %}
+          <canvas id="avbChart" height="220"></canvas>
+        {% else %}
+          <div class="border border-2 border-dashed rounded-3 p-4 text-center bg-light">
+            <p class="text-secondary mb-3">No budgets set for this month yet.</p>
+            <a href="{{ url_for('budgets.index') }}" class="btn btn-dark rounded-pill">
+              <i class="bi bi-plus-lg me-1"></i> Set your monthly budget
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm rounded-4 h-100">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h4 fw-bold mb-0">Your goals</h2>
+          <a href="{{ url_for('finance.goals_setup') }}" class="fw-semibold small"><i class="bi bi-plus-lg"></i> Add</a>
+        </div>
+        {% if not goals %}
+          <div class="border border-2 border-dashed rounded-3 p-4 text-center bg-light">
+            <p class="text-secondary mb-3">No goals yet.</p>
+            <a href="{{ url_for('finance.goals_setup') }}" class="btn btn-dark rounded-pill"><i class="bi bi-plus-lg me-1"></i> Add first goal</a>
+          </div>
+        {% else %}
+          <div class="d-flex flex-column gap-3">
+            {% for g in goals[:4] %}
+              {% set tint = 'warning' if g.priority == 'High' else ('info' if g.priority == 'Medium' else 'success') %}
+              <div class="border rounded-3 p-3">
+                <div class="d-flex justify-content-between align-items-center gap-2">
+                  <div class="fw-semibold text-truncate">{{ g.name }}</div>
+                  <span class="badge rounded-pill bg-{{ tint }}-subtle text-{{ tint }}-emphasis">{{ g.priority }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-1">
+                  <span class="text-muted small">by {{ g.target_date.strftime('%d %b %Y') }}</span>
+                  <span class="fw-bold">{{ g.target_amount | inr }}</span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Row 3: Quick actions -->
+<div class="row g-3">
+  <div class="col-md-4">
+    <a href="{{ url_for('statements.upload') }}" class="card border-0 shadow-sm rounded-4 h-100 text-decoration-none text-dark quick-action">
+      <div class="card-body p-4">
+        <div class="feature-icon bg-primary text-white mb-3"><i class="bi bi-file-earmark-arrow-up"></i></div>
+        <h3 class="h5 fw-bold mb-1">Import statement</h3>
+        <p class="text-muted small mb-0">Upload a CSV, we'll auto-categorize and let you review.</p>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{{ url_for('accounts.new_account') }}" class="card border-0 shadow-sm rounded-4 h-100 text-decoration-none text-dark quick-action">
+      <div class="card-body p-4">
+        <div class="feature-icon bg-warning-subtle text-warning-emphasis mb-3"><i class="bi bi-wallet2"></i></div>
+        <h3 class="h5 fw-bold mb-1">Add account</h3>
+        <p class="text-muted small mb-0">Bank, wallet, cash, credit card or UPI.</p>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{{ url_for('accounts.new_asset') }}" class="card border-0 shadow-sm rounded-4 h-100 text-decoration-none text-dark quick-action">
+      <div class="card-body p-4">
+        <div class="feature-icon bg-info-subtle text-info-emphasis mb-3"><i class="bi bi-gem"></i></div>
+        <h3 class="h5 fw-bold mb-1">Add asset</h3>
+        <p class="text-muted small mb-0">Track FDs, gold, stocks, MFs, property or crypto.</p>
+      </div>
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if actual_vs_budget %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+  const rows = {{ actual_vs_budget | tojson }};
+  const ctx = document.getElementById('avbChart');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => r.category),
+      datasets: [
+        { label: 'Budgeted', data: rows.map(r => r.budgeted), backgroundColor: '#E7E5E4', borderRadius: 6 },
+        { label: 'Actual',   data: rows.map(r => r.actual),
+          backgroundColor: rows.map(r => r.status === 'over' ? '#EF4444' : r.status === 'warning' ? '#F59E0B' : r.status === 'no_budget' ? '#78716C' : '#22C55E'),
+          borderRadius: 6 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: c => c.dataset.label + ': ₹' + c.raw.toLocaleString('en-IN') } }
+      },
+      scales: {
+        x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 30 } },
+        y: { beginAtZero: true, ticks: { callback: v => '₹' + v.toLocaleString('en-IN') } }
+      }
+    }
+  });
+</script>
+{% endif %}
+{% endblock %}
