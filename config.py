@@ -55,5 +55,5 @@ class ProductionConfig(Config):
 config_by_name = {
     "development": DevelopmentConfig,
     "production": ProductionConfig,
-    "default": DevelopmentConfig,
+    "default": ProductionConfig,
 }
