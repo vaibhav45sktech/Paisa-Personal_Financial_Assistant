@@ -12,6 +12,11 @@ class Config:
         "DATABASE_URL",
         "postgresql+psycopg2://postgres:postgres@localhost:5432/paisa_db",
     )
+    
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    
+    SQLALCHEMY_DATABASE_URI = database_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
 
