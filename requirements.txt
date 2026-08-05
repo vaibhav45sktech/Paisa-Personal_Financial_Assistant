@@ -14,3 +14,4 @@ SQLAlchemy==2.0.32
 google-genai==0.7.0
 # --- Optional PDF statement parsing ---
 pdfplumber==0.11.4
+gunicorn==23.0.0
