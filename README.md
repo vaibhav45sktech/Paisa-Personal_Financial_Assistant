@@ -195,13 +195,43 @@ The face changes with your grade: 😄 → 🙂 → 😐 → 😟 → 😱. Scor
 
 ## Environment variables
 
-| Var             | Purpose                                          |
-| --------------- | ------------------------------------------------ |
-| `SECRET_KEY`    | Flask session signing key                        |
-| `DATABASE_URL`  | SQLAlchemy connection URI (Postgres)             |
-| `FLASK_APP`     | `run.py`                                         |
-| `FLASK_ENV`     | `development` or `production`                    |
-| `GEMINI_API_KEY`| Gemini AI Coach (optional; free tier available)  |
+| Var                  | Purpose                                          |
+| -------------------- | ------------------------------------------------ |
+| `SECRET_KEY`         | Flask session signing key                        |
+| `DATABASE_URL`       | SQLAlchemy connection URI (Postgres)             |
+| `FLASK_APP`          | `run.py`                                         |
+| `FLASK_ENV`          | `development` or `production`                    |
+| `GEMINI_API_KEY`     | Gemini AI Coach (optional; free tier available)  |
+| `PDF_PARSING_ENABLED`| `1` to enable PDF statement parsing (optional)   |
+
+---
+
+## Deploying on Vercel
+
+The app deploys to Vercel as a single Python Function via `wsgi.py`
+(`app = create_app()` at the top level — Vercel auto-detects this filename).
+`.python-version` pins the build to Python 3.12, and `vercel.json` sets a
+30s function timeout for slower requests (Gemini calls, statement parsing).
+
+Before deploying:
+
+1. **Database.** `DATABASE_URL` must point to a Postgres instance reachable
+   from the internet — Neon, Supabase, Railway, Render, etc. A `localhost`
+   URL (e.g. a local Docker container) is not reachable from Vercel's
+   serverless functions and every DB-backed route will fail.
+2. **Migrations.** Vercel does not run `flask db upgrade` for you. Run it
+   yourself against the production database before first deploy, and after
+   any migration is added:
+   ```bash
+   DATABASE_URL=<production-url> flask db upgrade
+   ```
+3. **Environment variables.** Set `SECRET_KEY`, `DATABASE_URL`, `FLASK_ENV=production`
+   and (optionally) `GEMINI_API_KEY` in the Vercel project's Environment
+   Variables settings — not in a committed `.env` file.
+
+Known limitation: `Flask-Limiter`'s default in-memory store doesn't persist
+or share state across serverless invocations, so rate limiting is best-effort
+in this deployment (swap in a Redis storage backend for real enforcement).
 
 ---
 
