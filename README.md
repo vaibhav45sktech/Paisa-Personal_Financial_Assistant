@@ -210,8 +210,10 @@ The face changes with your grade: 😄 → 🙂 → 😐 → 😟 → 😱. Scor
 
 The app deploys to Vercel as a single Python Function via `wsgi.py`
 (`app = create_app()` at the top level — Vercel auto-detects this filename).
-`.python-version` pins the build to Python 3.12, and `vercel.json` sets a
-30s function timeout for slower requests (Gemini calls, statement parsing).
+`.python-version` pins the build to Python 3.12. No `vercel.json` is needed:
+zero-config detection resolves the entrypoint on its own, and adding a
+`functions` block keyed to `wsgi.py` actually breaks the build, since that
+pattern is validated before the framework entrypoint is resolved.
 
 Before deploying:
 
