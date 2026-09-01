@@ -1,6 +1,7 @@
 """Auth forms — Flask-WTF with server-side validation & CSRF protection."""
+from flask import current_app
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
+from wtforms import StringField, PasswordField, SelectField, SubmitField
 from wtforms.validators import (
     DataRequired, Length, Email, EqualTo, Regexp, ValidationError,
 )
@@ -39,6 +40,11 @@ class SignupForm(FlaskForm):
             ),
         ],
     )
+    user_type = SelectField(
+        "I am a",
+        validators=[DataRequired(message="Please pick the option that fits you best.")],
+        default="general",
+    )
     password = PasswordField(
         "Password",
         validators=[
@@ -54,6 +60,10 @@ class SignupForm(FlaskForm):
         ],
     )
     submit = SubmitField("Create account")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_type.choices = current_app.config["USER_TYPE_CHOICES"]
 
     def validate_username(self, field):
         if User.query.filter_by(username=field.data.strip()).first():

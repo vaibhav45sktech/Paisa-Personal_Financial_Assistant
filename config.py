@@ -48,6 +48,13 @@ class Config:
     ]
     PRIORITIES = ["High", "Medium", "Low"]
 
+    # Onboarding profile selector — drives profile-aware scoring & dashboards.
+    USER_TYPE_CHOICES = [
+        ("student", "Student"),
+        ("micro_entrepreneur", "Micro-Entrepreneur"),
+        ("general", "General Personal Finance User"),
+    ]
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

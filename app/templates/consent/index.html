@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Data consent · paisa.{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+  <div>
+    <span class="badge rounded-pill bg-info-subtle text-info-emphasis px-3 py-2">
+      <i class="bi bi-shield-lock me-1"></i> You're in control
+    </span>
+    <h1 class="display-6 fw-bold mt-2 mb-1">Data consent</h1>
+    <p class="text-secondary mb-0">
+      Each feature below can only read the data you tick. Revoke anything and that
+      feature stops using it immediately — it degrades instead of guessing.
+    </p>
+  </div>
+  <div class="text-lg-end">
+    <div class="text-uppercase small fw-semibold text-muted">Currently shared</div>
+    <div class="h3 fw-bold mb-0">
+      {{ summary.categories_shared }} <span class="text-muted fs-6">of {{ summary.total_categories }} categories</span>
+    </div>
+    <div class="small text-muted">
+      {{ summary.grants_active }} of {{ summary.grants_total }} permissions active
+    </div>
+    {% if summary.categories_not_shared > 0 %}
+      <div class="small text-warning-emphasis">
+        <i class="bi bi-exclamation-triangle me-1"></i>{{ summary.categories_not_shared }} not shared
+      </div>
+    {% endif %}
+    {% if summary.purposes_off_count > 0 %}
+      <div class="small text-danger-emphasis">
+        <i class="bi bi-slash-circle me-1"></i>{{ summary.purposes_off_count }} feature{{ 's' if summary.purposes_off_count != 1 }} switched off
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="alert alert-light border rounded-4 d-flex gap-3 align-items-start mb-4">
+  <i class="bi bi-info-circle fs-4 text-secondary"></i>
+  <div class="small mb-0">
+    <strong>What is never used.</strong> Recommendations are built only from money
+    data — income, expenses, savings, cash flow, debt, EMI, assets, goals and budget
+    adherence. No caste, religion, gender, ethnicity, disability, health or other
+    protected characteristic is collected, stored or scored.
+  </div>
+</div>
+
+<div class="row g-3">
+  {% for group in matrix %}
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+            <h2 class="h5 fw-bold mb-0">{{ group.label }}</h2>
+            {% if group.fully_granted %}
+              <span class="badge rounded-pill bg-success-subtle text-success-emphasis">All shared</span>
+            {% elif group.fully_revoked %}
+              <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">Off</span>
+            {% else %}
+              <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">
+                {{ group.granted_count }} / {{ group.total_count }}
+              </span>
+            {% endif %}
+          </div>
+          <p class="text-muted small mb-3">{{ group.description }}</p>
+
+          <div class="d-flex flex-column gap-2 mb-3">
+            {% for cat in group.categories %}
+              <div class="d-flex justify-content-between align-items-center border rounded-3 px-3 py-2">
+                <div class="d-flex align-items-center gap-2">
+                  {% if cat.granted %}
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                  {% else %}
+                    <i class="bi bi-slash-circle text-muted"></i>
+                  {% endif %}
+                  <span class="{% if not cat.granted %}text-muted{% endif %}">{{ cat.label }}</span>
+                </div>
+                <form method="POST"
+                      action="{{ url_for('consent.revoke') if cat.granted else url_for('consent.grant') }}"
+                      class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <input type="hidden" name="purpose" value="{{ group.purpose }}" />
+                  <input type="hidden" name="data_category" value="{{ cat.category }}" />
+                  <input type="hidden" name="scope" value="category" />
+                  <button type="submit"
+                          class="btn btn-sm rounded-pill px-3 {% if cat.granted %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                    {{ 'Revoke' if cat.granted else 'Grant' }}
+                  </button>
+                </form>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="d-flex gap-2">
+            {% if not group.fully_granted %}
+              <form method="POST" action="{{ url_for('consent.grant') }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <input type="hidden" name="purpose" value="{{ group.purpose }}" />
+                <input type="hidden" name="scope" value="purpose" />
+                <button type="submit" class="btn btn-sm btn-dark rounded-pill px-3">
+                  <i class="bi bi-check2-all me-1"></i>Grant all
+                </button>
+              </form>
+            {% endif %}
+            {% if not group.fully_revoked %}
+              <form method="POST" action="{{ url_for('consent.revoke') }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <input type="hidden" name="purpose" value="{{ group.purpose }}" />
+                <input type="hidden" name="scope" value="purpose" />
+                <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                  Revoke access
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

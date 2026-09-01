@@ -53,11 +53,17 @@
             <a class="btn btn-sm btn-light rounded-pill px-3 d-none d-lg-inline nav-link-fun" href="{{ url_for('ai_coach.index') }}">
               <i class="bi bi-chat-dots me-1"></i>Coach
             </a>
+            <a class="btn btn-sm btn-light rounded-pill px-3 d-none d-lg-inline nav-link-fun" href="{{ url_for('recommendations.index') }}">
+              <i class="bi bi-compass me-1"></i>Priorities
+            </a>
             <a class="btn btn-sm btn-light rounded-pill px-3 d-none d-xl-inline nav-link-fun" href="{{ url_for('analyzer.index') }}">
               <i class="bi bi-cart-check me-1"></i>Analyzer
             </a>
             <a class="btn btn-sm btn-light rounded-pill px-3 d-none d-xl-inline nav-link-fun" href="{{ url_for('reports.index') }}">
               <i class="bi bi-file-earmark-text me-1"></i>Report
+            </a>
+            <a class="btn btn-sm btn-light rounded-circle nav-link-fun" href="{{ url_for('consent.index') }}" title="Data consent">
+              <i class="bi bi-shield-lock"></i>
             </a>
             <a class="position-relative btn btn-sm btn-light rounded-circle nav-link-fun" href="{{ url_for('notifications.index') }}" title="Notifications">
               <i class="bi bi-bell"></i>

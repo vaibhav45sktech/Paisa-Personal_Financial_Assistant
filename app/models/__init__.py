@@ -1,5 +1,8 @@
 """Model package — imports all models so Flask-Migrate can detect them."""
-from app.models.user import User
+from app.models.user import User, USER_TYPES, USER_TYPE_LABELS
+from app.models.consent import (
+    Consent, DATA_CATEGORIES, PURPOSES, CONSENT_SOURCES, CONSENT_POLICY_VERSION,
+)
 from app.models.financial_profile import FinancialProfile, BudgetItem
 from app.models.financial_goal import FinancialGoal
 from app.models.account import Account, ACCOUNT_TYPES
@@ -14,7 +17,10 @@ from app.models.purchase import Purchase
 from app.models.ai_conversation import AISession, AIMessage
 
 __all__ = [
-    "User", "FinancialProfile", "BudgetItem", "FinancialGoal",
+    "User", "USER_TYPES", "USER_TYPE_LABELS",
+    "Consent", "DATA_CATEGORIES", "PURPOSES", "CONSENT_SOURCES",
+    "CONSENT_POLICY_VERSION",
+    "FinancialProfile", "BudgetItem", "FinancialGoal",
     "Account", "ACCOUNT_TYPES", "Asset", "ASSET_TYPES",
     "Category", "DEFAULT_CATEGORIES", "CATEGORY_TYPES",
     "BankStatement", "STATEMENT_STATUS",

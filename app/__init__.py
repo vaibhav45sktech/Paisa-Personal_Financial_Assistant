@@ -41,6 +41,8 @@ def create_app(config_name: str | None = None) -> Flask:
     from app.analyzer.routes import analyzer_bp
     from app.notifications.routes import notifications_bp
     from app.reports.routes import reports_bp
+    from app.consent.routes import consent_bp
+    from app.recommendations.routes import recommendations_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
@@ -53,6 +55,8 @@ def create_app(config_name: str | None = None) -> Flask:
     app.register_blueprint(analyzer_bp, url_prefix="/analyzer")
     app.register_blueprint(notifications_bp, url_prefix="/notifications")
     app.register_blueprint(reports_bp, url_prefix="/reports")
+    app.register_blueprint(consent_bp, url_prefix="/consent")
+    app.register_blueprint(recommendations_bp, url_prefix="/recommendations")
 
     # Expose unread notification count to every template
     from app.services import notification_service

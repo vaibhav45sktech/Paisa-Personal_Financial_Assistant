@@ -7,20 +7,29 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from app.extensions import db
-from app.models.user import User
+from app.models.user import User, USER_TYPES
+from app.services import consent_service
 
 MAX_FAILED_ATTEMPTS = 5
 
 
-def register_user(username: str, email: str, phone: str, password: str) -> User:
+def register_user(
+    username: str, email: str, phone: str, password: str,
+    user_type: str = "general",
+) -> User:
     user = User(
         username=username.strip(),
         email=email.strip().lower(),
         phone=phone.strip(),
+        user_type=user_type if user_type in USER_TYPES else "general",
     )
     user.set_password(password)
     db.session.add(user)
     db.session.commit()
+
+    # Seed the consent matrix so the app's existing features work from signup.
+    # The user can revoke any of it from the Consent Center.
+    consent_service.ensure_defaults(user.id, source="onboarding")
     return user
 
 

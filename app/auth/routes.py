@@ -21,6 +21,7 @@ def signup():
             email=form.email.data,
             phone=form.phone.data,
             password=form.password.data,
+            user_type=form.user_type.data,
         )
         login_user(user)
         flash("Welcome to paisa!", "success")

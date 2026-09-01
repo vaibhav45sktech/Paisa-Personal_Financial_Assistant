@@ -33,6 +33,13 @@
           </div>
 
           <div class="mb-3">
+            {{ form.user_type.label(class="form-label small text-uppercase fw-semibold text-muted") }}
+            {{ form.user_type(class="form-select form-select-lg rounded-3" + (" is-invalid" if form.user_type.errors else "")) }}
+            {% for e in form.user_type.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+            <div class="form-text">Tailors your dashboard and the advice you get. You can change it later.</div>
+          </div>
+
+          <div class="mb-3">
             {{ form.password.label(class="form-label small text-uppercase fw-semibold text-muted") }}
             {{ form.password(class="form-control form-control-lg rounded-3" + (" is-invalid" if form.password.errors else ""), placeholder="Min. 6 characters") }}
             {% for e in form.password.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}

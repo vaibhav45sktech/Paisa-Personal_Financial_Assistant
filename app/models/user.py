@@ -7,6 +7,15 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from app.extensions import db, bcrypt
 
+# Drives profile-aware scoring and which dashboard variant is rendered.
+USER_TYPES = ("student", "micro_entrepreneur", "general")
+
+USER_TYPE_LABELS = {
+    "student": "Student",
+    "micro_entrepreneur": "Micro-Entrepreneur",
+    "general": "General Personal Finance User",
+}
+
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
@@ -17,6 +26,7 @@ class User(UserMixin, db.Model):
     phone = db.Column(db.String(20), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     full_name = db.Column(db.String(120), nullable=True)
+    user_type = db.Column(db.String(20), nullable=False, default="general")
     profile_picture = db.Column(db.String(255), nullable=True)
     last_login = db.Column(db.DateTime(timezone=True), nullable=True)
     failed_login_attempts = db.Column(db.Integer, nullable=False, default=0)
@@ -62,6 +72,14 @@ class User(UserMixin, db.Model):
         "BankStatement", back_populates="user",
         cascade="all, delete-orphan", order_by="BankStatement.upload_date.desc()",
     )
+    consents = db.relationship(
+        "Consent", back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    @property
+    def user_type_label(self) -> str:
+        return USER_TYPE_LABELS.get(self.user_type, USER_TYPE_LABELS["general"])
 
     # Flask-Login expects `get_id` to return a string
     def get_id(self) -> str:

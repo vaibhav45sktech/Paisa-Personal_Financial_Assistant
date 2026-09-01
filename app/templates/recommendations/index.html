@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Your priorities · paisa.{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+  <div>
+    <span class="badge rounded-pill bg-{{ zone_style.badge }}-subtle text-{{ zone_style.badge }}-emphasis px-3 py-2">
+      {{ zone_style.dot }} {{ zone }} — {{ zone_label }}
+    </span>
+    <h1 class="display-6 fw-bold mt-2 mb-1">What to fix first</h1>
+    <p class="text-secondary mb-0">
+      Ranked by a fixed set of rules — severity first, then how much of your health
+      score each fix recovers. The same inputs always produce the same order.
+    </p>
+  </div>
+  <a href="{{ url_for('dashboard.index') }}" class="btn btn-sm btn-light rounded-pill px-3 border">
+    <i class="bi bi-arrow-left me-1"></i>Back to dashboard
+  </a>
+</div>
+
+{% if all_clear %}
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-5 text-center">
+      <div class="feature-icon bg-success-subtle text-success-emphasis mb-3 mx-auto"><i class="bi bi-check2-circle"></i></div>
+      <h2 class="h4 fw-bold mb-2">{{ all_clear.title }}</h2>
+      <p class="text-secondary mb-0">{{ all_clear.reason }}</p>
+    </div>
+  </div>
+{% endif %}
+
+{% for item in explained %}
+  {% set rec = item.rec %}
+  {% set d = item.detail %}
+  <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-{{ d.badge }}">
+    <div class="card-body p-4">
+      <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-2">
+        <div>
+          <div class="text-uppercase small fw-semibold text-muted">Priority {{ rec.priority }}</div>
+          <h2 class="h4 fw-bold mb-1">{{ d.dot }} {{ d.what }}</h2>
+          <p class="text-secondary mb-0">{{ d.summary }}</p>
+        </div>
+        <div class="text-end">
+          <span class="badge rounded-pill bg-{{ d.badge }}-subtle text-{{ d.badge }}-emphasis">{{ d.severity_label }}</span>
+          {% if d.impact > 0 %}
+            <div class="small text-muted mt-1">recovers ~{{ '%.0f' | format(d.impact) }} pts</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="row g-4 mt-1">
+        <div class="col-lg-7">
+          <div class="text-uppercase small fw-semibold text-muted mb-1">Why</div>
+          <p class="mb-2">{{ d.why }}</p>
+          {% if d.why_is_ai_phrased %}
+            <div class="small text-muted mb-3">
+              <i class="bi bi-stars me-1"></i>Wording by AI. The decision and every figure
+              come from the rules engine.
+              <a href="{{ url_for('recommendations.index', plain=1) }}">Show the engine's own wording</a>
+            </div>
+          {% endif %}
+
+          <div class="text-uppercase small fw-semibold text-muted mb-1">Impact</div>
+          <p class="mb-3">{{ d.impact_note }}</p>
+
+          {% if d.what_to_do %}
+            <div class="text-uppercase small fw-semibold text-muted mb-1">What to do</div>
+            <ul class="mb-3">
+              {% for step in d.what_to_do %}<li>{{ step }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+
+          <div class="d-flex flex-wrap gap-2">
+            {% for rc in d.reason_codes %}
+              <span class="badge rounded-pill bg-light text-dark border" title="{{ rc.code }}">{{ rc.label }}</span>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="text-uppercase small fw-semibold text-muted mb-2">Data used</div>
+          <div class="d-flex flex-column gap-2">
+            {% for row in d.data_used %}
+              <div class="d-flex justify-content-between border rounded-3 px-3 py-2 small">
+                <span class="text-muted">{{ row.label }}</span>
+                <span class="fw-semibold">{{ row.value }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endfor %}
+
+<!-- Why is my score what it is -->
+{% if breakdown %}
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4">
+      <h2 class="h5 fw-bold mb-1">Why is my score {{ ctx.health_score }}?</h2>
+      <p class="text-muted small mb-3">Biggest shortfalls first.</p>
+      <div class="d-flex flex-column gap-3">
+        {% for c in breakdown %}
+          <div>
+            <div class="d-flex justify-content-between small">
+              <span><strong>{{ c.label }}</strong> <span class="text-muted">{{ c.reason }}</span></span>
+              <span class="fw-semibold">{{ c.score }} / {{ c.max }}</span>
+            </div>
+            <div class="progress mt-1" style="height: 6px;">
+              <div class="progress-bar" role="progressbar"
+                   style="width: {{ c.pct }}%; background: {% if c.pct >= 70 %}#22C55E{% elif c.pct >= 40 %}#F59E0B{% else %}#EF4444{% endif %};"></div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<!-- Decision factors -->
+<div class="card border-0 shadow-sm rounded-4">
+  <div class="card-body p-4">
+    <h2 class="h5 fw-bold mb-1">Decision factors</h2>
+    <p class="text-muted small mb-3">
+      Exactly what these recommendations were built from — and what is never
+      considered.
+    </p>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="text-uppercase small fw-semibold text-success-emphasis mb-2">Used</div>
+        <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+          {% for f in factors.used %}
+            <li><i class="bi bi-check-circle-fill text-success me-2"></i>{{ f.label }}</li>
+          {% endfor %}
+        </ul>
+
+        {% if factors.withheld %}
+          <div class="text-uppercase small fw-semibold text-warning-emphasis mt-3 mb-2">Withheld by you</div>
+          <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+            {% for f in factors.withheld %}
+              <li class="text-muted"><i class="bi bi-slash-circle me-2"></i>{{ f.label }}</li>
+            {% endfor %}
+          </ul>
+          <a href="{{ url_for('consent.index') }}" class="small fw-semibold d-inline-block mt-2">Manage consent</a>
+        {% endif %}
+      </div>
+
+      <div class="col-md-6">
+        <div class="text-uppercase small fw-semibold text-muted mb-2">Never used</div>
+        <div class="d-flex flex-wrap gap-2">
+          {% for f in factors.never_used %}
+            <span class="badge rounded-pill bg-light text-muted border text-decoration-line-through">{{ f }}</span>
+          {% endfor %}
+        </div>
+        <p class="text-muted small mt-3 mb-0">
+          No protected characteristic is collected, stored or scored. Recommendations
+          are a function of your money data only.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
