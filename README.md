@@ -206,6 +206,29 @@ The face changes with your grade: 😄 → 🙂 → 😐 → 😟 → 😱. Scor
 
 ---
 
+## Deploying on Render (recommended)
+
+Render suits this app better than a serverless host: it runs a persistent
+process, provisions Postgres on the same platform, and runs migrations as
+part of the build.
+
+`render.yaml` is a Blueprint that provisions both the database and the web
+service and wires `DATABASE_URL` between them:
+
+1. Push this repo to GitHub.
+2. Render dashboard → **New** → **Blueprint** → select the repo → **Apply**.
+3. Wait for the first build (installs deps, runs `flask db upgrade`, starts
+   `gunicorn wsgi:app`).
+
+`SECRET_KEY` is generated automatically. `GEMINI_API_KEY` is marked
+`sync: false`, so Render prompts for it — leave it blank to deploy without
+the AI Coach; everything else works, and the coach shows a setup notice.
+
+Note: on Render's free plan the service sleeps after inactivity, so the
+first request after an idle period takes ~30s to wake.
+
+---
+
 ## Deploying on Vercel
 
 The app deploys to Vercel as a single Python Function via `wsgi.py`

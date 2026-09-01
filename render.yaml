@@ -1,0 +1,36 @@
+# Render Blueprint — provisions the Postgres database and the web service
+# together, and wires DATABASE_URL between them automatically.
+#
+# Deploy: Render dashboard -> New -> Blueprint -> pick this repo -> Apply.
+databases:
+  - name: paisa-db
+    databaseName: paisa
+    user: paisa
+    plan: free
+
+services:
+  - type: web
+    name: paisa
+    runtime: python
+    plan: free
+    # Migrations run here, before the new version starts serving. Render
+    # exposes env vars (including DATABASE_URL) during the build step.
+    buildCommand: "pip install -r requirements.txt && flask db upgrade"
+    startCommand: "gunicorn wsgi:app"
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: paisa-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_APP
+        value: wsgi.py
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      # Optional — the AI Coach degrades gracefully when this is absent.
+      - key: GEMINI_API_KEY
+        sync: false
